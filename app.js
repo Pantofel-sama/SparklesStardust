@@ -50,12 +50,28 @@ firstListBtn.addEventListener("click", showListAdding);
 
 // functions
 
+var currentListId = "";
+
+function getListIdFromUrl(){
+  var url_string = location.href;
+  var url = new URL(url_string);
+  return url.searchParams.get("list");
+}
+
 function whatDisplay() {
-  let lists = JSON.parse(localStorage.getItem("lists"));
-  if (!lists) {
-    addFirstList.style.display = "inline-block";
-  } else {
-    displayStorage();
+
+  var list = getListIdFromUrl()
+  if(list){
+    currentListId = list;
+    let lists = JSON.parse(localStorage.getItem("lists"));
+    if (!lists) {
+      addFirstList.style.display = "inline-block";
+    } else {
+      displayStorage(list);
+    }
+  }
+  else{
+    sideMenu.style.display = "flex";
   }
 }
 
@@ -69,7 +85,7 @@ function hideMenu(e) {
 }
 
 function showMenu() {
-  if (sideMenu.style.display === "none") {
+  if (sideMenu.style.display === "none" || sideMenu.style.display === "") {
     sideMenu.style.display = "flex";
   } else {
     sideMenu.style.display = "none";
@@ -94,10 +110,10 @@ function createList(e) {
   addListContainer.style.display = "none";
   let listName = inputTextList.value;
   addList(listName);
-  displayItemsTitle.innerHTML = `${listName}`;
-  list.innerHTML = "";
-  emptyList.style.display = "block";
-  displayClearAll();
+  //displayItemsTitle.innerHTML = `${listName}`;
+  //list.innerHTML = "";
+  //emptyList.style.display = "block";
+  //displayClearAll();
 }
 
 function saveListInStorage(list) {
@@ -109,7 +125,7 @@ function saveListInStorage(list) {
   lists.push(list);
   localStorage.setItem("lists", JSON.stringify(lists));
   showListsInMenu();
-  displayItemsTitle.id = list.id;
+  location.replace(`${location.pathname}?list=${list.id}`);
 }
 
 function showListsInMenu() {
@@ -147,8 +163,11 @@ function addItem(event) {
   } else {
     input.value = "";
 
-    let listId = displayItemsTitle.id;
-    addNote(listId, value);
+    //let listId = displayItemsTitle.id;
+    if(currentListId)
+      addNote(currentListId, value);
+    else
+      alert("Coś się popsuło")
     // updateStorage(value);
   }
 }
@@ -211,23 +230,24 @@ function saveItemInStorage(note) {
 
 function displayList(e) {
   if (e.target.classList.contains("list_link")) {
+    let listID = e.target.id;
+    var a = window.location.pathname;
+    
     sideMenu.style.display = "none";
     addListContainer.style.display = "none";
     content.style.display = "block";
-    let linkTitle = e.target.innerHTML;
-    displayItemsTitle.innerHTML = `${linkTitle}`;
-    let listID = e.target.id;
-    refreshList(listID);
+
     displayClearAll();
+    location.replace(`${a}?list=${listID}`);
   }
 }
 
-function displayStorage() {
+function displayStorage(listID) {
   content.style.display = "block";
   if (localStorage.notes) {
-    let notes = JSON.parse(localStorage.getItem("notes"));
-    let lastNote = notes[notes.length - 1];
-    let listID = lastNote.listId;
+   // let notes = JSON.parse(localStorage.getItem("notes"));
+    //let lastNote = notes[notes.length - 1];
+    ////let listID = lastNote.listId;
     let lists = JSON.parse(localStorage.getItem("lists"));
     lists.map((list) => {
       if (list.id === listID) {
@@ -245,11 +265,18 @@ function displayStorage() {
 }
 
 function displayClearAll() {
-  if (emptyList.style.display === "block") {
-    clearAll.style.display = "none";
-  } else {
+
+  if(list.childNodes.length != 0)
     clearAll.style.display = "block";
-  }
+  else
+    clearAll.style.display = "none";
+
+
+  // if (emptyList.style.display === "block") {
+  //   clearAll.style.display = "none";
+  // } else {
+  //   
+  // }
 }
 
 function removeItems() {
